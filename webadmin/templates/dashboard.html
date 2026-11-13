@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <title>Studio Bloom — записи</title>
+  <style>
+    :root { --pink: #db2777; --line: #eee; }
+    body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #fdf8fa; color: #1f2937; }
+    header { display: flex; align-items: center; gap: 18px; padding: 14px 28px; background: #fff; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0; font-size: 19px; color: var(--pink); }
+    .nav { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .nav a { padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 8px; color: inherit; text-decoration: none; background: #fff; }
+    .nav b { min-width: 150px; text-align: center; }
+    main { padding: 20px 28px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+    .stat b { display: block; font-size: 22px; }
+    .stat span { color: #6b7280; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: 60px repeat({{ masters | length }}, 1fr); background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    .head { padding: 10px; font-weight: 600; border-bottom: 1px solid var(--line); background: #fafafa; }
+    .head small { display: block; font-weight: 400; color: #6b7280; }
+    .hours, .col { position: relative; height: 600px; border-right: 1px solid var(--line); }
+    .hours div { height: 60px; padding: 2px 8px; color: #9ca3af; font-size: 12px; border-bottom: 1px dashed #f1f1f1; box-sizing: border-box; }
+    .col { background: repeating-linear-gradient(#fff 0 59px, #f5f5f5 59px 60px); }
+    .slot { position: absolute; left: 6px; right: 6px; padding: 6px 8px; border-radius: 8px; background: #fce7f3; border-left: 3px solid var(--pink); overflow: hidden; font-size: 12px; box-sizing: border-box; }
+    .slot b { display: block; font-size: 13px; }
+    .slot.pending { background: #fef3c7; border-color: #d97706; }
+    .bottom { display: grid; grid-template-columns: 1fr; margin-top: 18px; }
+    form.bc { display: flex; gap: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+    form.bc input { flex: 1; padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font: inherit; }
+    form.bc button { border: 0; background: var(--pink); color: #fff; padding: 0 16px; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Studio Bloom</h1><span>розклад записів</span>
+    <div class="nav">
+      <a href="/?day={{ prev_day }}">←</a>
+      <b>{{ day.strftime("%d.%m.%Y") }}</b>
+      <a href="/?day={{ next_day }}">→</a>
+      <a href="/">Сьогодні</a>
+    </div>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="stat"><b>{{ total_today }}</b><span>записів на цей день</span></div>
+      <div class="stat"><b>{{ (stats.get("confirmed", 0) + stats.get("done", 0) + stats.get("pending_payment", 0)) }}</b><span>записів за 30 днів</span></div>
+      <div class="stat"><b>{{ "{:,}".format(revenue).replace(",", " ") }} ₴</b><span>сума записів за 30 днів</span></div>
+      <div class="stat"><b>{{ clients }}</b><span>клієнтів у базі</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="head"></div>
+      {% for m in masters %}<div class="head">{{ m.name }}<small>{{ m.specialty }}</small></div>{% endfor %}
+
+      <div class="hours">{% for h in hours %}<div>{{ h }}</div>{% endfor %}</div>
+      {% for m in masters %}
+      <div class="col">
+        {% for b in columns[m.id] %}
+          {% set top = (b.starts_at.hour - 10) * 60 + b.starts_at.minute %}
+          {% set height = ((b.ends_at - b.starts_at).seconds // 60) - 4 %}
+          <div class="slot {{ 'pending' if b.status == 'pending_payment' else '' }}" style="top: {{ top + 2 }}px; height: {{ height }}px">
+            <b>{{ b.starts_at.strftime("%H:%M") }} {{ b.client.name }}</b>
+            {{ b.service.name }}<br>{{ b.client.phone or "" }}
+          </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="bottom">
+      <form class="bc" method="post" action="/broadcast" onsubmit="return confirm('Надіслати всім клієнтам?')">
+        <input name="text" placeholder="Текст розсилки по базі клієнтів (наприклад, про акцію)" required>
+        <button>Розіслати</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
