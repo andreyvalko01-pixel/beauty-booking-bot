@@ -1,7 +1,7 @@
 from datetime import datetime, time
 from pathlib import Path
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Time, func
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Time
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -25,7 +25,7 @@ class Client(Base):
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
     name: Mapped[str] = mapped_column(String(100))
     phone: Mapped[str | None] = mapped_column(String(20))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
 
 class Service(Base):
@@ -83,7 +83,7 @@ class Booking(Base):
     reminded_day: Mapped[bool] = mapped_column(default=False)
     reminded_2h: Mapped[bool] = mapped_column(default=False)
     google_event_id: Mapped[str | None] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
     client: Mapped[Client] = relationship(lazy="selectin")
     master: Mapped[Master] = relationship(lazy="selectin")
